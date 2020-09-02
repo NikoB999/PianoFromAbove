@@ -1,6 +1,6 @@
 # PianoFromAbove
 
-Welcome to my viz branch. This includes all the changes of upstream's viz branch, but with other hacky tweaks included!
+Welcome to khang06's viz branch. This includes all the changes of upstream's viz branch, but with other hacky tweaks included!
 
 This is currently (much) faster than upstream viz.
 
