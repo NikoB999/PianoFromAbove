@@ -572,7 +572,7 @@ void MainScreen::InitColors()
 {
     m_csBackground.SetColor( 0x00464646, 0.7f, 1.3f );
     m_csKBBackground.SetColor( 0x00999999, 0.4f, 0.0f );
-    m_csKBRed.SetColor( 0x0000E6E6, 0.5f ); // "red"
+    m_csKBRed.SetColor( 0x000D0A98, 0.5f ); // "red"
     m_csKBWhite.SetColor( 0x00FFFFFF, 0.8f, 0.6f );
     m_csKBSharp.SetColor( 0x00404040, 0.5f, 0.0f );
 }
@@ -1938,7 +1938,7 @@ void MainScreen::RenderBorder()
 
 void MainScreen::RenderText()
 {
-    int iLines = 4;
+    int iLines = 3;
     if (m_Timer.m_bManualTimer)
         iLines++;
 
@@ -1971,7 +1971,7 @@ void MainScreen::RenderText()
     m_pRenderer->BeginText();
 
     RenderStatus(&rcStatus);
-    RenderMarker(&rcMarker, m_wsMarker.c_str()); // lol
+    //RenderMarker(&rcMarker, m_wsMarker.c_str()); // lol
     if (m_bZoomMove)
         RenderMessage(&rcMsg, TEXT("- Left-click and drag to move the screen\n- Right-click and drag to zoom horizontally\n- Press Escape to abort changes\n- Press Ctrl+V to save changes"));
 
@@ -1980,91 +1980,50 @@ void MainScreen::RenderText()
 
 void MainScreen::RenderStatus(LPRECT prcStatus)
 {
-    // Build the time text
-    TCHAR sTime[128];
-    const MIDI::MIDIInfo& mInfo = m_MIDI.GetInfo();
-    if (m_llStartTime >= 0)
-        _stprintf_s(sTime, TEXT("%lld:%04.1lf / %lld:%04.1lf"),
-            m_llStartTime / 60000000, (m_llStartTime % 60000000) / 1000000.0,
-            mInfo.llTotalMicroSecs / 60000000, (mInfo.llTotalMicroSecs % 60000000) / 1000000.0);
-    else
-        _stprintf_s(sTime, TEXT("\t-%lld:%04.1lf / %lld:%04.1lf"),
-            -m_llStartTime / 60000000, (-m_llStartTime % 60000000) / 1000000.0,
-            mInfo.llTotalMicroSecs / 60000000, (mInfo.llTotalMicroSecs % 60000000) / 1000000.0);
+	// Build the time text
+	TCHAR sTime[128];
+	const MIDI::MIDIInfo& mInfo = m_MIDI.GetInfo();
+	if (m_llStartTime >= 0)
+		_stprintf_s(sTime, TEXT("%lld:%04.1lf / %lld:%04.1lf"),
+			m_llStartTime / 60000000, (m_llStartTime % 60000000) / 1000000.0,
+			mInfo.llTotalMicroSecs / 60000000, (mInfo.llTotalMicroSecs % 60000000) / 1000000.0);
+	else
+		_stprintf_s(sTime, TEXT("\t-%lld:%04.1lf / %lld:%04.1lf"),
+			-m_llStartTime / 60000000, (-m_llStartTime % 60000000) / 1000000.0,
+			mInfo.llTotalMicroSecs / 60000000, (mInfo.llTotalMicroSecs % 60000000) / 1000000.0);
 
-    // Build the FPS text
-    TCHAR sFPS[128];
-    _stprintf_s(sFPS, TEXT("%.1lf"), m_dFPS);
+	// Build the FPS text
+	TCHAR sFPS[128];
+	_stprintf_s(sFPS, TEXT("%.1lf"), m_dFPS);
 
-    // Build vertex capacity text
-    TCHAR sVQCapacity[128];
-    _stprintf_s(sVQCapacity, TEXT("%llu"), batch_vertices.capacity());
+	// Build the Scoring text
+	TCHAR sScore[128] = TEXT("N/A"), sMult[128] = TEXT("");
 
-    // Build state debug text
-    size_t state_size = 0;
-    for (auto note_state : m_vState)
-        state_size += note_state.size();
-    TCHAR sStateSize[128];
-    _stprintf_s(sStateSize, TEXT("%llu"), state_size);
+	// Display the text
+	InflateRect(prcStatus, -6, -3);
 
-    TCHAR sSpeed[128];
-    if (m_Timer.m_bManualTimer) {
-        // Build speed text if in manual timer mode
-        _stprintf_s(sSpeed, TEXT("%.1f%%"), (m_dFPS / m_Timer.m_dFramerate) * 100.0);
-    }
+	OffsetRect(prcStatus, 2, 1);
+	m_pRenderer->DrawText(TEXT("Time:"), Renderer::Small, prcStatus, 0, 0xFF404040);
+	m_pRenderer->DrawText(sTime, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
+	OffsetRect(prcStatus, -2, -1);
+	m_pRenderer->DrawText(TEXT("Time:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
+	m_pRenderer->DrawText(sTime, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
 
+	OffsetRect(prcStatus, 2, 16 + 1);
+	m_pRenderer->DrawText(TEXT("FPS:"), Renderer::Small, prcStatus, 0, 0xFF404040);
+	m_pRenderer->DrawText(sFPS, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
+	OffsetRect(prcStatus, -2, -1);
+	m_pRenderer->DrawText(TEXT("FPS:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
+	m_pRenderer->DrawText(sFPS, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
 
-    // Display the text
-    InflateRect(prcStatus, -6, -3);
+	OffsetRect(prcStatus, 2, 16 + 1);
+	m_pRenderer->DrawText(TEXT("Score:"), Renderer::Small, prcStatus, 0, 0xFF404040);
+	m_pRenderer->DrawText(sScore, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
+	OffsetRect(prcStatus, -2, -1);
+	m_pRenderer->DrawText(TEXT("Score:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
+	m_pRenderer->DrawText(sScore, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
 
-    OffsetRect(prcStatus, 2, 1);
-    m_pRenderer->DrawText(TEXT("Time:"), Renderer::Small, prcStatus, 0, 0xFF404040);
-    m_pRenderer->DrawText(sTime, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
-    OffsetRect(prcStatus, -2, -1);
-    m_pRenderer->DrawText(TEXT("Time:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
-    m_pRenderer->DrawText(sTime, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
-
-    OffsetRect(prcStatus, 2, 16 + 1);
-    m_pRenderer->DrawText(TEXT("FPS:"), Renderer::Small, prcStatus, 0, 0xFF404040);
-    m_pRenderer->DrawText(sFPS, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
-    OffsetRect(prcStatus, -2, -1);
-    m_pRenderer->DrawText(TEXT("FPS:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
-    m_pRenderer->DrawText(sFPS, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
-
-    OffsetRect(prcStatus, 2, 16 + 1);
-    m_pRenderer->DrawText(TEXT("VQ Capacity:"), Renderer::Small, prcStatus, 0, 0xFF404040);
-    m_pRenderer->DrawText(sVQCapacity, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
-    OffsetRect(prcStatus, -2, -1);
-    m_pRenderer->DrawText(TEXT("VQ Capacity:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
-    m_pRenderer->DrawText(sVQCapacity, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
-
-    OffsetRect(prcStatus, 2, 16 + 1);
-    m_pRenderer->DrawText(TEXT("m_vState:"), Renderer::Small, prcStatus, 0, 0xFF404040);
-    m_pRenderer->DrawText(sStateSize, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
-    OffsetRect(prcStatus, -2, -1);
-    m_pRenderer->DrawText(TEXT("m_vState:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
-    m_pRenderer->DrawText(sStateSize, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
-
-    if (m_Timer.m_bManualTimer) {
-        OffsetRect(prcStatus, 2, 16 + 1);
-        m_pRenderer->DrawText(TEXT("Speed:"), Renderer::Small, prcStatus, 0, 0xFF404040);
-        m_pRenderer->DrawText(sSpeed, Renderer::Small, prcStatus, DT_RIGHT, 0xFF404040);
-        OffsetRect(prcStatus, -2, -1);
-        m_pRenderer->DrawText(TEXT("Speed:"), Renderer::Small, prcStatus, 0, 0xFFFFFFFF);
-        m_pRenderer->DrawText(sSpeed, Renderer::Small, prcStatus, DT_RIGHT, 0xFFFFFFFF);
-    }
 }
-
-void MainScreen::RenderMarker(LPRECT prcPos, const wchar_t* sStr)
-{
-    InflateRect(prcPos, -6, -3);
-
-    OffsetRect(prcPos, 2, 1);
-    m_pRenderer->DrawText(sStr, Renderer::Small, prcPos, 0, 0xFF404040);
-    OffsetRect(prcPos, -2, -1);
-    m_pRenderer->DrawText(sStr, Renderer::Small, prcPos, 0, 0xFFFFFFFF);
-}
-
 void MainScreen::RenderMessage(LPRECT prcMsg, TCHAR* sMsg)
 {
     RECT rcMsg = { 0 };
